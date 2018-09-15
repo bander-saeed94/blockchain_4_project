@@ -1,0 +1,24 @@
+{
+  "name": "project_3_blockchain",
+  "version": "1.0.0",
+  "description": "RESTful web API for blockchain",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bander-saeed94/blockchain_with_nodejs_API.git"
+  },
+  "author": "bander",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bander-saeed94/blockchain_with_nodejs_API/issues"
+  },
+  "homepage": "https://github.com/bander-saeed94/blockchain_with_nodejs_API#readme",
+  "dependencies": {
+    "crypto-js": "^3.1.9-1",
+    "express": "^4.16.3",
+    "level": "^4.0.0"
+  }
+}
