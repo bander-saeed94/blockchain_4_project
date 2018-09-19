@@ -69,7 +69,7 @@ router.post('/message-signature/validate', (req, res, next) => {
     //if verified
     if (bitcoinMessage.verify(message, address, signature)) {
         registerStar = true
-        messageSignature = 'valid'
+        messageSignature = 'valid'   
         validationRoutine.pop({ address: address })
     }
     res.json({

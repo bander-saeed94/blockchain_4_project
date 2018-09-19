@@ -21,8 +21,18 @@ app.get('/block/:blockHeight', (req, res, next) => {
 })
 
 app.post('/block', (req, res, next) => {
-    let body = req.body;
-    let block = new Block(body.data)
+    let body = req.body
+    let address = body.address
+    let star = body.star
+    let ra = star.ra
+    let dec = star.dec
+    if(address == undefined || star == undefined ||
+         ra == undefined || dec == undefined ){
+        return next(new Error('Bad request'))
+    }
+    //validate access
+    body.star.story = new Buffer(body.star.story).toString('hex');
+    let block = new Block(body)
     blockchain.addBlock(block).then((block) => {
         res.send({ block: block })
     }).catch(next)
