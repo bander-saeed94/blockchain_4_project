@@ -73,6 +73,44 @@ class Blockchain {
         })
     }
 
+    getBlocksByAddress(address, callback){
+        //read db
+        let input= db.createReadStream()
+        let blocks = []
+        input.on('data', function(data) {
+            let body = data.value.body
+            if(data.key != 'blockHeight'){
+                if(address == body.address){
+                    blocks.push(data.value)
+                }
+            }
+          }).on('error', function(err) {
+            return callback(err)
+            // return console.log('Unable to read data stream!', err)
+          }).on('close', function() {
+            callback(null, blocks)
+          });
+    }
+    getBlockByHash(hash, callback){
+        //read db
+        let input= db.createReadStream()
+        input.on('data', function(data) {
+            if(data.key != 'blockHeight'){
+                if(hash == data.value.hash){
+                    input.destroy()
+                    return callback(null, data.value)
+                }
+            }
+          }).on('error', function(err) {
+            return callback(err)
+            // return console.log('Unable to read data stream!', err)
+          }).on('close', function() {
+            callback(null)
+          });
+    }
+
+
+
     //get blockchain height
     //this is getBlockHeight
     getBlockHeightWrapper() {
@@ -189,4 +227,4 @@ class Blockchain {
     }
 }
 
-module.exports = Blockchain
+module.exports = new Blockchain()

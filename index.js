@@ -1,9 +1,11 @@
 const express = require('express');
 const app = express();
-const Blockchain = require('./blockchain');
+// const Blockchain = require('./blockchain');
+const blockchain = require('./blockchain');
 const Block = require('./block');
-const blockchain = new Blockchain();
+// const blockchain = new Blockchain();
 const step1Routes = require('./routes/step1')
+const step3Routes = require('./routes/step3')
 
 
 app.use(express.json())
@@ -26,19 +28,20 @@ app.post('/block', (req, res, next) => {
     let star = body.star
     let ra = star.ra
     let dec = star.dec
-    if(address == undefined || star == undefined ||
-         ra == undefined || dec == undefined ){
-        return next(new Error('Bad request'))
-    }
+    // if(address == undefined || star == undefined ||
+    //      ra == undefined || dec == undefined ){
+    //     return next(new Error('Bad request'))
+    // }
     //validate access
     body.star.story = new Buffer(body.star.story).toString('hex');
     let block = new Block(body)
     blockchain.addBlock(block).then((block) => {
-        res.send({ block: block })
+        res.send(block)
     }).catch(next)
 })
 
 app.use(step1Routes)
+app.use(step3Routes)
 
 app.use((err, req, res, next) => {
     res.json({ error: err.message })
