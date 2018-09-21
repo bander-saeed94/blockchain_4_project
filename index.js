@@ -28,10 +28,11 @@ app.post('/block', (req, res, next) => {
     let star = body.star
     let ra = star.ra
     let dec = star.dec
-    // if(address == undefined || star == undefined ||
-    //      ra == undefined || dec == undefined ){
-    //     return next(new Error('Bad request'))
-    // }
+    let story = star.story
+    if(address == undefined || star == undefined ||
+         ra == undefined || dec == undefined || story == undefined){
+        return next(new Error('Bad request'))
+    }
     //validate access
     body.star.story = new Buffer(body.star.story).toString('hex');
     let block = new Block(body)
