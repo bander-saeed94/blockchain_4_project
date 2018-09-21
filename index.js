@@ -36,7 +36,10 @@ app.post('/block', (req, res, next) => {
     //validate access
     let s = new Buffer(body.star.story).toString('hex');
     body.star.story = s
-    console.log(Buffer.byteLength(s, 'hex') + " bytes");
+    if(Buffer.byteLength(s, 'hex') > 500){
+        return next(new Error('Star story very long'))
+    }
+    // console.log(Buffer.byteLength(s, 'hex') + " bytes");
 
     let block = new Block(body)
     blockchain.addBlock(block).then((block) => {
