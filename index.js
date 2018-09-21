@@ -26,8 +26,9 @@ app.post('/block', (req, res, next) => {
     let star = body.star
     let ra = star.ra
     let dec = star.dec
+    let story = star.story
     if(address == undefined || star == undefined ||
-         ra == undefined || dec == undefined ){
+         ra == undefined || dec == undefined || story == undefined){
         return next(new Error('Bad request'))
     }
     //validate access
