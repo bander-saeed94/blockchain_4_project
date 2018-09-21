@@ -13,23 +13,28 @@ router.post('/requestValidation', (req, res, next) => {
                 error: httpStatusMsg.getMessage(httpStatus.BAD_REQUEST)
             })
     }
-    let requestTimeStamp = new Date().getTime().toString().slice(0, -3);
     let address = req.body.address
     let elem = validationRoutine.find((element) => {
         return element.address == address
     })
-    if (elem != undefined && elem.requestTimeStamp > 0) {
-        let requestTimeStamp = elem.requestTimeStamp
-        return res.json({
-            address: address,
-            requestTimeStamp: requestTimeStamp,
-            message: `${address}:${requestTimeStamp}:starRegistry`,
-            validationWindow: requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300 <= 0 ? 0 : requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300
-        })
-    }
     if (elem != undefined) {
-        validationRoutine.pop({ address: address })
+        let validationWindow = elem.requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300
+        if (validationWindow > 0) {
+            let requestTimeStamp = elem.requestTimeStamp
+            return res.json({
+                address: address,
+                requestTimeStamp: requestTimeStamp,
+                message: `${address}:${requestTimeStamp}:starRegistry`,
+                validationWindow: requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300 <= 0 ? 0 : requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300
+            })
+        }
+        else{
+            //exist but timeout
+            validationRoutine.pop({ address: address })
+        }
     }
+    //new request no entry before or popped after timeout
+    let requestTimeStamp = new Date().getTime().toString().slice(0, -3);
     validationRoutine.push({ address: address, requestTimeStamp: requestTimeStamp })
     res.json({
         address: address,
@@ -69,7 +74,7 @@ router.post('/message-signature/validate', (req, res, next) => {
     //if verified
     if (bitcoinMessage.verify(message, address, signature)) {
         registerStar = true
-        messageSignature = 'valid'   
+        messageSignature = 'valid'
         validationRoutine.pop({ address: address })
     }
     res.json({

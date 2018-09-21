@@ -29,12 +29,15 @@ app.post('/block', (req, res, next) => {
     let ra = star.ra
     let dec = star.dec
     let story = star.story
-    if(address == undefined || star == undefined ||
-         ra == undefined || dec == undefined || story == undefined){
+    if (address == undefined || star == undefined ||
+        ra == undefined || dec == undefined || story == undefined) {
         return next(new Error('Bad request'))
     }
     //validate access
-    body.star.story = new Buffer(body.star.story).toString('hex');
+    let s = new Buffer(body.star.story).toString('hex');
+    body.star.story = s
+    console.log(Buffer.byteLength(s, 'hex') + " bytes");
+
     let block = new Block(body)
     blockchain.addBlock(block).then((block) => {
         res.send(block)
