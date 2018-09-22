@@ -10,7 +10,8 @@ router.get('/stars/address\::address', (req, res, next) => {
             return next(err)
         //story dececod
         blocks.forEach(block => {
-            if (block.body.star.story != null && block.body.star.story != undefined) {
+            let star = block.body.star
+            if (star != undefined) {
                 let story = block.body.star.story;
                 block.body.star.storyDecoded = new Buffer(story, 'hex').toString()
             }
@@ -23,7 +24,8 @@ router.get('/stars/hash\::hash', (req, res, next) => {
         if (err)
             return next(err)
         //story dececod
-        if (block.body.star.story != null && block.body.star.story != undefined) {
+        let star = block.body.star
+        if (star != undefined) {
             let story = block.body.star.story;
             block.body.star.storyDecoded = new Buffer(story, 'hex').toString()
         }

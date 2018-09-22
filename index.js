@@ -19,7 +19,9 @@ app.get('/block/:blockHeight', (req, res, next) => {
         }
         else {
             //story dececod
-            if(block.body.star.story != null && block.body.star.story != undefined ){
+            //check if undefined (for genesis block)
+            let star = block.body.star
+            if(star != undefined && star != null ){
                 let story = block.body.star.story;
                 block.body.star.storyDecoded = new Buffer(story, 'hex').toString()
             }
