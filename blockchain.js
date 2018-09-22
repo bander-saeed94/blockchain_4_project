@@ -93,20 +93,21 @@ class Blockchain {
     }
     getBlockByHash(hash, callback){
         //read db
+        let val = undefined;
         let input= db.createReadStream()
         input.on('data', function(data) {
             if(data.key != 'blockHeight'){
                 if(hash == data.value.hash){
+                    val = data.value
                     input.destroy()
-                    return callback(null, data.value)
                 }
             }
           }).on('error', function(err) {
             return callback(err)
             // return console.log('Unable to read data stream!', err)
           }).on('close', function() {
-            // callback(null, val)
-          });
+            return callback(null, val)
+        });
     }
 
 

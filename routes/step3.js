@@ -24,6 +24,9 @@ router.get('/stars/hash\::hash', (req, res, next) => {
         if (err)
             return next(err)
         //story dececod
+        if(block == undefined){
+            return res.status(404).send({'error': 'star not found'})
+        }
         let star = block.body.star
         if (star != undefined) {
             let story = block.body.star.story;
