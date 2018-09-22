@@ -6,6 +6,7 @@ const Block = require('./block');
 // const blockchain = new Blockchain();
 const step1Routes = require('./routes/step1')
 const step3Routes = require('./routes/step3')
+const Step1Helper = require('./routes/step1Helper')
 
 
 app.use(express.json())
@@ -17,12 +18,13 @@ app.get('/block/:blockHeight', (req, res, next) => {
             next(new Error('block not found'))
         }
         else {
-            res.send({ block: block })
+            //story dececod
+            res.send(block)
         }
     })
 })
 
-app.post('/block', (req, res, next) => {
+app.post('/block', async function (req, res, next) {
     let body = req.body
     let address = body.address
     let star = body.star
@@ -33,18 +35,30 @@ app.post('/block', (req, res, next) => {
         ra == undefined || dec == undefined || story == undefined) {
         return next(new Error('Bad request'))
     }
-    //validate access
-    let s = new Buffer(body.star.story).toString('hex');
-    body.star.story = s
-    if(Buffer.byteLength(s, 'hex') > 500){
-        return next(new Error('Star story very long'))
+    let validated;
+    try {
+        validated = await Step1Helper.getFromValidated(address)
+        if (validated) {
+            //validate access
+            let s = new Buffer(body.star.story).toString('hex');
+            body.star.story = s
+            if (Buffer.byteLength(s, 'hex') > 500) {
+                return next(new Error('Star story very long'))
+            }
+            // console.log(Buffer.byteLength(s, 'hex') + " bytes");
+            Step1Helper.pushValidated(address, false).then(() => {
+                let block = new Block(body)
+                blockchain.addBlock(block).then((block) => {
+                    res.send(block)
+                }).catch(next)
+            }).catch(next)
+        } else {
+            next(new Error('Not validated'))
+        }
     }
-    // console.log(Buffer.byteLength(s, 'hex') + " bytes");
-
-    let block = new Block(body)
-    blockchain.addBlock(block).then((block) => {
-        res.send(block)
-    }).catch(next)
+    catch (err) {
+        next(new Error('Not validated'))
+    }
 })
 
 app.use(step1Routes)

@@ -1,50 +1,64 @@
 const express = require('express');
 const router = express.Router()
-const validationRoutine = []
-const bitcoin = require('bitcoinjs-lib');
 const bitcoinMessage = require('bitcoinjs-message');
 const httpStatus = require('http-status-codes');
 const httpStatusMsg = require('http-status-code');
+const Step1Helper = require('./step1Helper')
 
-router.post('/requestValidation', (req, res, next) => {
-    if (req.body.address == undefined) {
+
+router.post('/requestValidation', async function (req, res, next) {
+    let address = req.body.address
+    if (address == undefined) {
         return res.status(httpStatus.BAD_REQUEST)
             .json({
                 error: httpStatusMsg.getMessage(httpStatus.BAD_REQUEST)
             })
     }
-    let address = req.body.address
-    let elem = validationRoutine.find((element) => {
-        return element.address == address
-    })
-    if (elem != undefined) {
-        let validationWindow = elem.requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300
+    let elem;
+    try {
+        //get if exist 
+        elem = await Step1Helper.getFromValidationRoutine(address)
+        let validationWindow = elem.requestTimeStamp - timeNow() + 300
         if (validationWindow > 0) {
+            //validation window did not expire
             let requestTimeStamp = elem.requestTimeStamp
+            return res.json({
+                address: address,
+                requestTimeStamp: elem.requestTimeStamp,
+                message: `${address}:${requestTimeStamp}:starRegistry`,
+                validationWindow: elem.requestTimeStamp - timeNow() + 300 <= 0 ? 0 : elem.requestTimeStamp - timeNow() + 300
+            })
+        } else {
+            //validation window expire
+            requestTimeStamp = timeNow()
+            //update
+            let save = await Step1Helper.pushToValidationRoutine(address, { address: address, requestTimeStamp: requestTimeStamp })
             return res.json({
                 address: address,
                 requestTimeStamp: requestTimeStamp,
                 message: `${address}:${requestTimeStamp}:starRegistry`,
-                validationWindow: requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300 <= 0 ? 0 : requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300
+                validationWindow: requestTimeStamp - timeNow() + 300 <= 0 ? 0 : requestTimeStamp - timeNow() + 300
             })
         }
-        else{
-            //exist but timeout
-            validationRoutine.pop({ address: address })
+    } catch (err) {
+        //new request
+        let requestTimeStamp = timeNow()
+        try {
+            let save = await Step1Helper.pushToValidationRoutine(address, { address: address, requestTimeStamp: requestTimeStamp })
+            return res.json({
+                address: address,
+                requestTimeStamp: requestTimeStamp,
+                message: `${address}:${requestTimeStamp}:starRegistry`,
+                validationWindow: requestTimeStamp - timeNow() + 300 <= 0 ? 0 : requestTimeStamp - timeNow() + 300
+            })
+        }
+        catch (err) {
+            next(err)
         }
     }
-    //new request no entry before or popped after timeout
-    let requestTimeStamp = new Date().getTime().toString().slice(0, -3);
-    validationRoutine.push({ address: address, requestTimeStamp: requestTimeStamp })
-    res.json({
-        address: address,
-        requestTimeStamp: requestTimeStamp,
-        message: `${address}:${requestTimeStamp}:starRegistry`,
-        validationWindow: requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300 <= 0 ? 0 : requestTimeStamp - new Date().getTime().toString().slice(0, -3) + 300
-    })
 })
 
-router.post('/message-signature/validate', (req, res, next) => {
+router.post('/message-signature/validate', async function (req, res, next) {
     //address, signature 
     if (req.body.address == undefined || req.body.signature == undefined) {
         return res.status(httpStatus.BAD_REQUEST)
@@ -53,41 +67,51 @@ router.post('/message-signature/validate', (req, res, next) => {
             })
     }
     let address = req.body.address
-    let elemInValidationRoutine = validationRoutine.find((element) => {
-        return element.address == address
-    })
-    if (elemInValidationRoutine == undefined) {
+    let elem;
+    try {
+        elem = await Step1Helper.getFromValidationRoutine(address)
+
+        let requestTimeStamp = elem.requestTimeStamp
+        let signingTimeStamp = timeNow()
+
+        if (requestTimeStamp - signingTimeStamp + 300 <= 0) {
+            return res.status(401).json({ error: 'Time out' })
+        }
+
+        let message = `${address}:${requestTimeStamp}:starRegistry`
+        let signature = req.body.signature
+
+        let registerStar = false;
+        let messageSignature = 'invalid';
+        //if verified
+        if (bitcoinMessage.verify(message, address, signature)) {
+            registerStar = true
+            messageSignature = 'valid'
+            try {
+                await Step1Helper.popFromValidationRoutine(address)
+                //push to validated
+                await Step1Helper.pushToValidationRoutine('validated',address )
+                await Step1Helper.pushValidated(address, true)
+                return res.json({
+                    registerStar: registerStar,
+                    status: {
+                        address: address,
+                        requestTimeStamp: requestTimeStamp,
+                        message: message,
+                        validationWindow: requestTimeStamp - signingTimeStamp + 300 <= 0 ? 0 : requestTimeStamp - signingTimeStamp + 300,
+                        messageSignature: messageSignature
+                    }
+                })
+            } catch (err) {
+                next(err)
+            }
+        }
+    } catch (err) {
         return res.status(404).json({ error: 'No entery' })
     }
-    let requestTimeStamp = elemInValidationRoutine.requestTimeStamp
-    let signingTimeStamp = new Date().getTime().toString().slice(0, -3);
-
-    if (requestTimeStamp - signingTimeStamp + 300 <= 0) {
-        return res.status(401).json({ error: 'Time out' })
-    }
-    //verify
-    let message = `${address}:${requestTimeStamp}:starRegistry`
-    let signature = req.body.signature
-    console.log(bitcoinMessage.verify(message, address, signature))
-    let registerStar = false;
-    let messageSignature = 'invalid';
-    //if verified
-    if (bitcoinMessage.verify(message, address, signature)) {
-        registerStar = true
-        messageSignature = 'valid'
-        validationRoutine.pop({ address: address })
-    }
-    res.json({
-        registerStar: registerStar,
-        status: {
-            address: address,
-            requestTimeStamp: requestTimeStamp,
-            message: message,
-            validationWindow: requestTimeStamp - signingTimeStamp + 300 <= 0 ? 0 : requestTimeStamp - signingTimeStamp + 300,
-            messageSignature: messageSignature
-        }
-    })
-
 })
 
+function timeNow() {
+    return new Date().getTime().toString().slice(0, -3);
+}
 module.exports = router
