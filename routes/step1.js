@@ -107,7 +107,16 @@ router.post('/message-signature/validate', async function (req, res, next) {
             }
         }
     } catch (err) {
-        return res.status(404).json({ error: 'No entery' })
+        try{
+            let  validated = await Step1Helper.getFromValidated(address)
+            if(validated){
+                return res.json({ message: 'Validated go ahead and notarize' })
+            }else{
+                return res.json({ message: 'Request for Validation again to register a new star' })
+            }
+        }catch(err){
+            return res.status(404).json({ error: 'No entry' })
+        }
     }
 })
 
