@@ -2,8 +2,4 @@ node_modules
 plyingArray.js
 chainData
 validateData
-validatedData/LOCK
-validatedData/LOG
-validatedData/CURRENT
-validatedData/*
 validatedData
