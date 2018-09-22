@@ -105,7 +105,7 @@ class Blockchain {
             return callback(err)
             // return console.log('Unable to read data stream!', err)
           }).on('close', function() {
-            callback(null)
+            // callback(null, val)
           });
     }
 
