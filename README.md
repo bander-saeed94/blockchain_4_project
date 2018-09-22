@@ -1,65 +1,131 @@
 
 [![HitCount](http://hits.dwyl.io/bander-saeed/blockchain_4_project.svg)](http://hits.dwyl.io/bander-saeed/blockchain_4_project)
 
-This app uses express framework,
-to test you need to have node installed
+# Local Development API Server
+## Usage
+#### Request address validation
 ```
-node --version
+curl "http://localhost:1337/requestValidation"
 ```
 
-Once you download the repo run this command in the project directory
+###### Parameters
 ```
-npm install
+{
+    "address": <address>
+}
+```
+
+#### validate message
 ````
-This will install dependencies needed
-
-Then you can start the server by running
+curl "http://localhost:1337/message-signature/validate"
+````
+###### Parameters
 ```
-node index
-```
-
-TEST the endpoints 
-
-request validation
-```
-POST http://localhost:8000/requestValidation 
-    BODY { "address": "1GESFRLAgAAxrSS19CtSSwSAWELkWDRED2yKt7vXRpWtDVLRzN"}
+{
+    "address": <address> ,
+    "signature": <signature>
+}
 ```
 
-message signature validation
+#### register a star
 ```
-POST http://localhost:8000/message-signature/validate 
-    BODY {
-	"address": "1GESFRLAgAAxrSS19CtSSwSAWELkWDRED2yKt7vXRpWtDVLRzN",
-	"signature": "IIGL/mcEn8za2HUjm8EKtONfp0Wq9ISindwR8fVblAQbltNOTLCm9f8V7S3VOtcny9enhU="
-    }
+curl -X "POST" "http://localhost:1337/block"
 ```
-
-Add block
+###### Parameters
 ```
-POST http://localhost:8000/block 
-    BODY {
-        "address": "1GESFRLAgAAxrSS19CtSSwSAWELkWDRED2yKt7vXRpWtDVLRzN",
-        "star": {
-            "dec": "-22° 22' 24.9",
-            "ra": "16h 22m 1.0s",
-            "story": "Found star using https://www.google.com/sky/"
-        }
-    }
+{
+    "address": "<address>",
+    "star": {
+         "dec": "-22° 22' 24.9",
+         "ra": "16h 22m 1.0s",
+         "story": "Found star using https://www.google.com/sky/ "
+         }
+}
 ```
 
+## Architecture
+Local server
+- Node.js
+- Express.js
+- level.js
 
-Get blocks by address
+## Getting Started
+
+Server depends on [node.js LTS Version: v8.11.3 ](https://nodejs.org/en/download/), [npm](https://www.npmjs.com/get-npm)
+Please make sure you have these installed before proceeding forward.
+
+Great, you are ready to proceed forward; awesome!
+
+Let's start with running commands in your terminal, known as command line interface (CLI)
+
+###### Install project dependancies
+```Install project dependancies
+# npm i
 ```
-GET http://localhost:8000/stars/address/1GESFRLAgAAxrSS19CtSSwSAWELkWDRED2yKt7vXRpWtDVLRzN
+###### Start the server
+```Start server
+# node index
+```
+### You should now have access to your API server environment
+Port        : 8000
+
+
+## Endpoints
+
+### GET Endpoints
+
+#### Get block by height
+```
+http://localhost:8000/block/<blockHeight>
+```
+#### Get all stars added by an address 
+```
+http://localhost:8000/stars/addres:<address>
+```
+#### Get a star by its hash
+```
+http://localhost:8000/stars/hash:<hash>
 ```
 
-Get block by hash
+
+### POST Endpoints
+
+#### Request address validation
 ```
-GET http://localhost:8000/stars/hash/a7d15c759c044c7d54c580b3d0f96b502e072c409d1f9155a66f99e1790ecf53
+curl "http://localhost:1337/requestValidation"
 ```
 
-Get block by height
+###### Parameters
 ```
-GET http://localhost:8000/block/7
+{
+    "address": <address>
+}
+```
+
+#### validate message
+````
+curl "http://localhost:1337/message-signature/validate"
+````
+###### Parameters
+```
+{
+    "address": <address> ,
+    "signature": <signature>
+}
+```
+
+#### register a star
+```
+curl -X "POST" "http://localhost:1337/block"
+```
+###### Parameters
+```
+{
+    "address": "<address>",
+    "star": {
+         "dec": "-22° 22' 24.9",
+         "ra": "16h 22m 1.0s",
+         "story": "Found star using https://www.google.com/sky/ "
+         }
+}
 ```
