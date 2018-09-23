@@ -21,7 +21,7 @@ app.get('/block/:blockHeight', (req, res, next) => {
             //story dececod
             //check if undefined (for genesis block)
             let star = block.body.star
-            if(star != undefined && star != null ){
+            if (star != undefined && star != null) {
                 let story = block.body.star.story;
                 block.body.star.storyDecoded = new Buffer(story, 'hex').toString()
             }
@@ -44,7 +44,7 @@ app.post('/block', async function (req, res, next) {
     let validated;
     try {
         validated = await Step1Helper.getFromValidated(address)
-        if (validated) {
+        if (validated.valid && validated.requestTimeStamp - timeNow() + 300 > 0) {
             //validate access
             let s = new Buffer(body.star.story).toString('hex');
             body.star.story = s
@@ -52,14 +52,14 @@ app.post('/block', async function (req, res, next) {
                 return next(new Error('Star story very long'))
             }
             // console.log(Buffer.byteLength(s, 'hex') + " bytes");
-            Step1Helper.pushValidated(address, false).then(() => {
+            Step1Helper.pushValidated(address, { valid: false }).then(() => {
                 let block = new Block(body)
                 blockchain.addBlock(block).then((block) => {
                     res.send(block)
                 }).catch(next)
             }).catch(next)
         } else {
-            next(new Error('Not validated'))
+            next(new Error('Not validated Or timeout'))
         }
     }
     catch (err) {

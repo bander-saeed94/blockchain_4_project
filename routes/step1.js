@@ -90,8 +90,7 @@ router.post('/message-signature/validate', async function (req, res, next) {
             try {
                 await Step1Helper.popFromValidationRoutine(address)
                 //push to validated
-                await Step1Helper.pushToValidationRoutine('validated',address )
-                await Step1Helper.pushValidated(address, true)
+                await Step1Helper.pushValidated(address,{valid: true, requestTimeStamp: requestTimeStamp} )
                 return res.json({
                     registerStar: registerStar,
                     status: {
@@ -108,10 +107,15 @@ router.post('/message-signature/validate', async function (req, res, next) {
         }
     } catch (err) {
         try{
+            //validated {valid: boolean, requestTimeStamp: Date() }
             let  validated = await Step1Helper.getFromValidated(address)
-            if(validated){
+            if(validated.valid && validated.requestTimeStamp - timeNow() + 300 > 0){
                 return res.json({ message: 'Validated go ahead and notarize' })
-            }else{
+            }
+            if(validated.requestTimeStamp - timeNow() + 300 <= 0){
+                return res.json({ message: 'Timeout' })
+            }
+            if(!validated.valid){
                 return res.json({ message: 'Request for Validation again to register a new star' })
             }
         }catch(err){
